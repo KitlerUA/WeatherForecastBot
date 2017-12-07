@@ -1,0 +1,3 @@
+package: github.com/KitlerUA/WeatherForecastBot
+import: 
+- package: github.com/yanzay/tbot

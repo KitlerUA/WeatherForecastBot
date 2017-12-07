@@ -1,0 +1,6 @@
+hash: 8f748b1ea8d82aa7c62c32ae7050e5bbb6a382108f1492f0dd3deedd0e2c49d4
+updated: 2017-12-06T14:16:16.155641368+02:00
+imports:
+- name: github.com/yanzay/tbot
+  version: 3ff06788dbb18cb87e551f0e4c9e3be3f4d4938a
+testImports: []
