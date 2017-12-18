@@ -1,6 +1,17 @@
-hash: 8f748b1ea8d82aa7c62c32ae7050e5bbb6a382108f1492f0dd3deedd0e2c49d4
-updated: 2017-12-06T14:16:16.155641368+02:00
+hash: 6d73a0c9d2e37aad72e6c8a2201824d688b5b5609bcdf40e60e3452a6ffc509f
+updated: 2017-12-18T17:43:06.885992911+02:00
 imports:
+- name: github.com/go-telegram-bot-api/telegram-bot-api
+  version: 2022d04b94f50056a09962b1ac81cdd821d20a55
+- name: github.com/technoweenie/multipartstreamer
+  version: a90a01d73ae432e2611d178c18367fbaa13e0154
+- name: github.com/yanzay/log
+  version: 87352bb235060cca8427c8f9fdd68c83b38ba461
 - name: github.com/yanzay/tbot
   version: 3ff06788dbb18cb87e551f0e4c9e3be3f4d4938a
+  subpackages:
+  - internal/adapter
+  - model
+- name: gopkg.in/olivere/elastic.v5
+  version: 79ff368708b3a2a9da641dc831d95fd0782bf4ef
 testImports: []

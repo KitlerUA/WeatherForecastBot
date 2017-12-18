@@ -1,3 +1,4 @@
 {
-  "bot_token":"454626759:AAFlHdJvgCo6M-TECOUZK7ydqi637LKh0E4"
+  "bot_token":"454626759:AAFlHdJvgCo6M-TECOUZK7ydqi637LKh0E4",
+  "chat_default_location":"chatslocation.json"
 }

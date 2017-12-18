@@ -1,8 +1,16 @@
 package handlers
 
-import "github.com/yanzay/tbot"
+import (
+	"time"
 
-func Start(message *tbot.Message){
-	message.ReplyKeyboard("Second welcome!", [][]string{{"1", "2"}, {"second row 1", "4"}})
-	message
+	"github.com/KitlerUA/WeatherForecastBot/weather"
+	"github.com/yanzay/tbot"
+)
+
+func Start(message *tbot.Message) {
+	message.ReplyKeyboard("Welcome!\nPlease choose your location", [][]string{{"L`viv, Ukraine"}})
+}
+
+func WeatherToday(message *tbot.Message) {
+	message.Reply(weather.Get(time.Now(), time.Now().Add(24*time.Hour)))
 }

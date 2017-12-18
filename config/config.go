@@ -12,6 +12,7 @@ var once sync.Once
 
 type Config struct {
 	BotToken string `json:"bot_token"`
+	ChatDefaultLocation string `json:"chat_default_location"`
 }
 
 func Get() Config{

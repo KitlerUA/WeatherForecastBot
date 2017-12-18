@@ -1,3 +1,4 @@
 package: github.com/KitlerUA/WeatherForecastBot
 import: 
 - package: github.com/yanzay/tbot
+- package: github.com/olivere/elastic
