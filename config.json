@@ -1,4 +1,5 @@
 {
   "bot_token":"454626759:AAFlHdJvgCo6M-TECOUZK7ydqi637LKh0E4",
-  "chat_default_location":"chatslocation.json"
+  "chat_default_location":"chatslocation.json",
+  "elastic_address":"http://elastic:9200"
 }

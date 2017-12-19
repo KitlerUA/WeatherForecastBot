@@ -13,6 +13,7 @@ var once sync.Once
 type Config struct {
 	BotToken string `json:"bot_token"`
 	ChatDefaultLocation string `json:"chat_default_location"`
+	ElasticAddress string `json:"elastic_address"`
 }
 
 func Get() Config{
