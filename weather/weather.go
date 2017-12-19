@@ -38,10 +38,9 @@ func Get(startDate, endDate time.Time) string {
 
 	log.Printf("Elasticsearch version %s", version)
 	ctx := context.Background()
-	exists, err := db.Get().IndexExists("twitter").Do(ctx)
+	exists, err := db.Get().IndexExists("wetbot").Do(ctx)
 	if err != nil {
-		// Handle error
-		panic(err)
+		log.Fatalf("Cannot check index: %s", err)
 	}
 	if !exists {
 		createIndex, err := db.Get().CreateIndex("wetbot").Do(ctx)
@@ -59,23 +58,32 @@ func Get(startDate, endDate time.Time) string {
 	}
 	if searchResult.Hits.TotalHits == 0 {
 		weather, err := getWeatherFromOpenMap()
+		log.Printf("Len of data from server %s", len(weather.List))
 		if err != nil {
 			log.Fatalf("Cannot get weather from OpenMap: %s", err)
 		}
 		for _, info := range weather.List {
-			unmarshaled, err := json.Marshal(&info)
+			marshaled, err := json.Marshal(&info)
 			if err != nil {
 				log.Fatalf("Cannot marshal info: %s", err)
 			}
 
-			_, err = db.Get().Index().Index("wetbot").Type("wetinfo").BodyJson(unmarshaled).Do(ctx)
+			//TODO: Error 400 (Bad Request): failed to parse [type=mapper_parsing_exception]
+			_, err = db.Get().Index().Index("wetbot").Type("wetinfo").BodyJson(marshaled).Do(ctx)
 			if err != nil {
-				log.Fatalf("%s", err)
+				log.Fatalf("Cannot put: %s", err)
 			}
 		}
-
 	}
-
+	searchResult, err = db.Get().Search().Index("wetbot").Query(query).Do(ctx)
+	if err != nil {
+		log.Fatalf("Cannot search: %s", err)
+	}
+	replyString := ""
+	for _, v := range searchResult.Hits.Hits {
+		log.Printf("Reply string = %s", replyString)
+		replyString += v.Fields["weather"].(string)
+	}
 	//get forecast from server, if we have no local data
 	/*weatherClient := http.Client{
 		Timeout: 5 * time.Second,
@@ -104,7 +112,7 @@ func Get(startDate, endDate time.Time) string {
 	}
 
 	return replyString*/
-	return version
+	return replyString
 }
 
 func getWeatherFromOpenMap() (InfoList, error) {
