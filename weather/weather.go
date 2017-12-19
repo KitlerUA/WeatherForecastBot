@@ -10,6 +10,7 @@ import (
 
 	"github.com/KitlerUA/WeatherForecastBot/config"
 	"github.com/KitlerUA/WeatherForecastBot/db"
+	"github.com/olivere/elastic"
 	"github.com/yanzay/log"
 )
 
@@ -51,21 +52,28 @@ func Get(startDate, endDate time.Time) string {
 			log.Fatal("Not acknowledge")
 		}
 	}
-	if get, err := db.Get().Index("wetbot").Type("info").
-	weather, err := getWeatherFromOpenMap()
+	query := elastic.NewRangeQuery("Date").From(startDate.Format("2006-01-02 15:04:05")).To(endDate.Format("2006-01-02 15:04:05")).Boost(3)
+	searchResult, err := db.Get().Search().Index("wetbot").Query(query).Do(ctx)
 	if err != nil {
-		log.Fatalf("Cannot get weather from OpenMap: %s", err)
+		log.Fatalf("Cannot search: %s", err)
 	}
-	for _, info := range weather.List {
-		unmarshaled, err := json.Marshal(&info)
+	if searchResult.Hits.TotalHits == 0 {
+		weather, err := getWeatherFromOpenMap()
 		if err != nil {
-			log.Fatalf("Cannot marshal info: %s", err)
+			log.Fatalf("Cannot get weather from OpenMap: %s", err)
+		}
+		for _, info := range weather.List {
+			unmarshaled, err := json.Marshal(&info)
+			if err != nil {
+				log.Fatalf("Cannot marshal info: %s", err)
+			}
+
+			_, err = db.Get().Index().Index("wetbot").Type("wetinfo").BodyJson(unmarshaled).Do(ctx)
+			if err != nil {
+				log.Fatalf("%s", err)
+			}
 		}
 
-		_, err = db.Get().Index().Index("wetbot").Type("wetinfo").BodyJson(unmarshaled).Do(ctx)
-		if err != nil {
-			log.Fatalf("%s", err)
-		}
 	}
 
 	//get forecast from server, if we have no local data
