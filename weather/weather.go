@@ -74,12 +74,10 @@ type InfoList struct {
 
 func Get(startDate, endDate time.Time) string {
 
-	version, err := db.Get().ElasticsearchVersion(config.Get().ElasticAddress)
+	_, err := db.Get().ElasticsearchVersion(config.Get().ElasticAddress)
 	if err != nil {
 		log.Fatalf("Cannot ping elastic %s", err)
 	}
-
-	log.Printf("Elasticsearch version %s", version)
 	ctx := context.Background()
 	exists, err := db.Get().IndexExists("wetbot").Do(ctx)
 	if err != nil {
@@ -87,6 +85,7 @@ func Get(startDate, endDate time.Time) string {
 	}
 	if !exists {
 		createIndex, err := db.Get().CreateIndex("wetbot").BodyString(indexMapping).Do(ctx)
+		db.Get().PutMapping()
 		if err != nil {
 			log.Fatalf("Cannot create index: %s ", err)
 		}
@@ -95,17 +94,12 @@ func Get(startDate, endDate time.Time) string {
 		}
 	}
 	query := elastic.NewRangeQuery("DtTxt").Gte(startDate.Unix()).Lte(endDate.Unix())
-	src, _ := query.Source()
-	data, err := json.Marshal(src)
-	got := string(data)
-	log.Printf("Query %s", got)
 	searchResult, err := db.Get().Search().Index("wetbot").Type("info").Query(query).Do(ctx)
 	if err != nil {
 		log.Fatalf("Cannot search: %s", err)
 	}
 	if searchResult.Hits.TotalHits == 0 {
 		weather, err := getWeatherFromOpenMap()
-		log.Printf("Len of data from server %s", len(weather.List))
 		if err != nil {
 			log.Fatalf("Cannot get weather from OpenMap: %s", err)
 		}
@@ -114,28 +108,27 @@ func Get(startDate, endDate time.Time) string {
 			eInfo := infoToElasticInfo(info)
 			_, err := db.Get().Index().Index("wetbot").Type("info").BodyJson(eInfo).Do(ctx)
 			if err != nil {
-				log.Fatalf("Cannot put %s: %s", eInfo, err)
+				log.Fatalf("Cannot put %v: %s", eInfo, err)
 			}
-			//log.Printf("Puted %s, %s, %s", put.Id, put.Index, put.Type)
 		}
 		_, err = db.Get().Flush().Index("wetbot").Do(ctx)
+		if err != nil {
+			log.Printf("Cannot flush index: %s")
+		}
 	}
 	//log.Printf("Query %s", query)
 	searchResult, err = db.Get().Search().Index("wetbot").Type("info").Query(query).Do(ctx)
-	log.Printf("Search result len %s", searchResult.TotalHits())
 	if err != nil {
 		log.Fatalf("Cannot search: %s", err)
 	}
 
 	replyString := ""
 	var info InfoElastic
-	//log.Printf("Search ", searchResult.Hits.Hits)
 	for _, item := range searchResult.Each(reflect.TypeOf(info)) {
 		if t, ok := item.(InfoElastic); ok {
 			replyString += time.Unix(t.DtTxt, 0).Format("2006-01-02 15:04:05") + " " + t.Description + " " + strconv.Itoa(int(t.Temp)) + "°C " + strconv.Itoa(int(t.Humidity)) + "%\n"
 		}
 	}
-	//_, _ = db.Get().DeleteIndex("wetbot").Do(ctx)
 	return replyString
 }
 
