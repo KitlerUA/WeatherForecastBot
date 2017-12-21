@@ -8,7 +8,7 @@ import (
 )
 
 func Start(message *tbot.Message) {
-	message.ReplyKeyboard("Welcome!\nPlease choose your location", [][]string{{"L`viv, Ukraine"}})
+	message.ReplyKeyboard("Welcome!\nPlease choose your location", [][]string{{"Lviv"}})
 }
 
 func WeatherToday(message *tbot.Message) {
