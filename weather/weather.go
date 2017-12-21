@@ -84,7 +84,8 @@ func Get(startDate, endDate time.Time) string {
 		log.Fatalf("Cannot check index: %s", err)
 	}
 	if !exists {
-		createIndex, err := db.Get().CreateIndex("wetbot").BodyString(indexMapping).Do(ctx)
+		//createIndex, err := db.Get().CreateIndex("wetbot").BodyString(indexMapping).Do(ctx)
+		createIndex, err := db.Get().CreateIndex("wetbot").Do(ctx)
 		db.Get().PutMapping()
 		if err != nil {
 			log.Fatalf("Cannot create index: %s ", err)

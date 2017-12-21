@@ -21,6 +21,7 @@ func main() {
 	if err = json.Unmarshal(data, &chatslocation.DefaultLocationByChatID); err != nil {
 		log.Print("Corrupted data in locations file. Data was`n load", err)
 	}
+	chatslocation.LoadCityList()
 	//save file before close
 	defer func() {
 		data, err = json.Marshal(chatslocation.DefaultLocationByChatID)
@@ -41,6 +42,7 @@ func main() {
 	log.Print("Middleware added")
 
 	bot.HandleFunc("/start", handlers.Start)
+	bot.HandleFunc("Today", handlers.WeatherToday)
 	bot.HandleFunc("{custom}", handlers.CustomInput)
 
 	log.Print("Start listen and serve...")

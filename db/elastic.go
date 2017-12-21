@@ -8,6 +8,8 @@ import (
 
 	"os"
 
+	"time"
+
 	"github.com/KitlerUA/WeatherForecastBot/config"
 	"github.com/yanzay/log"
 )
@@ -21,19 +23,27 @@ func Get() *elastic.Client {
 }
 
 func connectToBD() {
-	if len(os.Args) > 1 {
-		var err error
-		client, err = elastic.NewClientFromConfig(&econf.Config{URL: os.Args[1]})
-		if err != nil {
-			log.Fatalf("Cannot connect to Elastic %s", err)
-		}
-	} else {
-		var err error
-		client, err = elastic.NewClientFromConfig(&econf.Config{URL: config.Get().ElasticAddress})
+	for {
+		if len(os.Args) > 1 {
+			var err error
+			client, err = elastic.NewClientFromConfig(&econf.Config{URL: os.Args[1]})
+			if err != nil {
+				log.Printf("Cannot connect to Elastic %s", err)
+				time.Sleep(2000)
+				continue
+			}
+			break
+		} else {
+			var err error
+			client, err = elastic.NewClientFromConfig(&econf.Config{URL: config.Get().ElasticAddress})
 
-		//client, err = elastic.NewClient()
-		if err != nil {
-			log.Fatalf("Cannot connect to Elasticsearch  %s", err)
+			//client, err = elastic.NewClient()
+			if err != nil {
+				log.Printf("Cannot connect to Elasticsearch  %s", err)
+				time.Sleep(2000)
+				continue
+			}
+			break
 		}
 	}
 }
