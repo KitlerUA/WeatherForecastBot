@@ -98,7 +98,7 @@ func Get(startDate, endDate time.Time, location int) string {
 	}
 	query := elastic.NewRangeQuery("DtTxt").Gte(startDate.Unix()).Lte(endDate.Unix())
 	queryLocation := elastic.NewTermQuery("Location", location)
-	searchResult, err := db.Get().Search().Index("wetbot").Type("info").Query(query).Query(queryLocation).Do(ctx)
+	searchResult, err := db.Get().Search().Index("wetbot").Type("info").Query(query).Query(queryLocation).Sort("DtTxt", true).Do(ctx)
 	if err != nil {
 		log.Fatalf("Cannot search: %s", err)
 	}
@@ -121,7 +121,7 @@ func Get(startDate, endDate time.Time, location int) string {
 		}
 	}
 	//log.Printf("Query %s", query)
-	searchResult, err = db.Get().Search().Index("wetbot").Type("info").Query(query).Do(ctx)
+	searchResult, err = db.Get().Search().Index("wetbot").Type("info").Query(query).Query(queryLocation).Sort("DtTxt", true).Do(ctx)
 	if err != nil {
 		log.Fatalf("Cannot search: %s", err)
 	}
