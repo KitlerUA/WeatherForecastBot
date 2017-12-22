@@ -12,6 +12,8 @@ import (
 
 	"strconv"
 
+	"fmt"
+
 	"github.com/KitlerUA/WeatherForecastBot/config"
 	"github.com/KitlerUA/WeatherForecastBot/db"
 	"github.com/olivere/elastic"
@@ -101,7 +103,7 @@ func Get(startDate, endDate time.Time, location int) string {
 		log.Fatalf("Cannot search: %s", err)
 	}
 	if searchResult.Hits.TotalHits == 0 {
-		weather, err := getWeatherFromOpenMap()
+		weather, err := getWeatherFromOpenMap(location)
 		if err != nil {
 			log.Fatalf("Cannot get weather from OpenMap: %s", err)
 		}
@@ -134,12 +136,13 @@ func Get(startDate, endDate time.Time, location int) string {
 	return replyString
 }
 
-func getWeatherFromOpenMap() (InfoList, error) {
+func getWeatherFromOpenMap(location int) (InfoList, error) {
 	weatherClient := http.Client{
 		Timeout: 5 * time.Second,
 	}
 	weather := InfoList{}
-	req, err := http.NewRequest(http.MethodGet, "http://api.openweathermap.org/data/2.5/forecast?id=524901&units=metric&appid=9ebbdc484f058b6e91cba224d761fea2", nil)
+	requestString := fmt.Sprintf("http://api.openweathermap.org/data/2.5/forecast?id=%s&units=metric&appid=9ebbdc484f058b6e91cba224d761fea2", strconv.FormatInt(int64(location), 10))
+	req, err := http.NewRequest(http.MethodGet, requestString, nil)
 	if err != nil {
 		return weather, err
 	}
