@@ -109,7 +109,7 @@ func Get(startDate, endDate time.Time, location int) string {
 		}
 		for _, info := range weather.List {
 
-			eInfo := infoToElasticInfo(info)
+			eInfo := infoToElasticInfo(info, location)
 			_, err := db.Get().Index().Index("wetbot").Type("info").BodyJson(eInfo).Do(ctx)
 			if err != nil {
 				log.Fatalf("Cannot put %v: %s", eInfo, err)
@@ -150,19 +150,21 @@ func getWeatherFromOpenMap(location int) (InfoList, error) {
 	if err != nil {
 		return weather, err
 	}
+
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return weather, err
 	}
 	err = json.Unmarshal(body, &weather)
+	log.Printf("Received %d , data from server", len(weather.List))
 	return weather, err
 
 }
 
-func infoToElasticInfo(info Info) InfoElastic {
+func infoToElasticInfo(info Info, location int) InfoElastic {
 	dt, _ := time.Parse("2006-01-02 15:04:05", info.DtTxt)
 	res := InfoElastic{
-		Location:    702550,
+		Location:    location,
 		Temp:        info.Main.Temp,
 		Humidity:    info.Main.Humidity,
 		Description: info.Weather[0].Description,
