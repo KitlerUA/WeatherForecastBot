@@ -8,6 +8,11 @@ import (
 
 	"encoding/json"
 
+	"errors"
+	"fmt"
+
+	"reflect"
+
 	"github.com/KitlerUA/WeatherForecastBot/config"
 	"github.com/KitlerUA/WeatherForecastBot/db"
 	"github.com/olivere/elastic"
@@ -94,7 +99,7 @@ func AddOrUpdate(chatID int64, location int) error {
 			return err
 		}
 	}
-	query := elastic.NewTermQuery("location", chatID)
+	query := elastic.NewTermQuery("ChatID", chatID)
 	searchResult, err := db.Get().Search("locbot").Type("location").Query(query).Do(ctx)
 	if err != nil {
 		log.Printf("Cannot search: %s", err)
@@ -103,13 +108,14 @@ func AddOrUpdate(chatID int64, location int) error {
 	if searchResult.TotalHits() > 0 {
 		hitID := searchResult.Hits.Hits[0].Id
 		_, err = db.Get().Update().Index("locbot").Type("location").Id(hitID).
-			Script(elastic.NewScriptInline("ctx._source.location = params.newl").Lang("painless").Param("newl", location)).
+			Script(elastic.NewScriptInline("ctx._source.Location = params.newl").Lang("painless").Param("newl", location)).
 			Do(ctx)
 		if err != nil {
 			log.Printf("Cannot update doc %d : %s", hitID, err)
 			return err
 		}
 	} else {
+		log.Printf("Location for %s not found, creating new", chatID)
 		loc := LocationElastic{
 			ChatID:   chatID,
 			Location: location,
@@ -147,4 +153,20 @@ func LoadCityList() {
 			log.Printf("Cannot put %v: %s", c, err)
 		}
 	}
+}
+
+func Get(chatID int64) (int, error) {
+	query := elastic.NewTermQuery("ChatID", chatID)
+	ctx := context.Background()
+	searchResult, err := db.Get().Search("locbot").Type("location").Query(query).Do(ctx)
+	if err != nil {
+		log.Printf("Cannot search location for chat %d : %s", chatID, err)
+		return 0, err
+	}
+	if searchResult.TotalHits() < 1 {
+		err = errors.New(fmt.Sprintf("find 0 matches for cahtID %d", chatID))
+		return 0, err
+	}
+	var eL LocationElastic
+	return searchResult.Each(reflect.TypeOf(eL))[0].(LocationElastic).Location, nil
 }

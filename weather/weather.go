@@ -72,7 +72,7 @@ type InfoList struct {
 	List []Info `json:"list"`
 }
 
-func Get(startDate, endDate time.Time) string {
+func Get(startDate, endDate time.Time, location int) string {
 
 	_, err := db.Get().ElasticsearchVersion(config.Get().ElasticAddress)
 	if err != nil {
@@ -95,7 +95,8 @@ func Get(startDate, endDate time.Time) string {
 		}
 	}
 	query := elastic.NewRangeQuery("DtTxt").Gte(startDate.Unix()).Lte(endDate.Unix())
-	searchResult, err := db.Get().Search().Index("wetbot").Type("info").Query(query).Do(ctx)
+	queryLocation := elastic.NewTermQuery("Location", location)
+	searchResult, err := db.Get().Search().Index("wetbot").Type("info").Query(query).Query(queryLocation).Do(ctx)
 	if err != nil {
 		log.Fatalf("Cannot search: %s", err)
 	}
