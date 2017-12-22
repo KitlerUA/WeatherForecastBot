@@ -17,8 +17,6 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-    environment:
-      - ES_JAVA_OPTS=-XX:-UseGCTaskAffinity -XX:-BindGCTaskThreadsToCPUs -XX:ParallelGCThreads=1 -XX:ParallelCMSThreads=1
     networks:
       kitler:
         aliases:
