@@ -18,5 +18,5 @@ var icons = map[string]string{
 	"13d": "\u2744",
 	"13n": "\u2744",
 	"50d": "\u1F32B",
-	"50n": "\u1F32B",
+	"50n": "\u1F301",
 }

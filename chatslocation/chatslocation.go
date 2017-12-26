@@ -18,8 +18,6 @@ import (
 	"github.com/olivere/elastic"
 )
 
-var DefaultLocationByChatID map[int64]int
-
 type LocationElastic struct {
 	ChatID   int64
 	Location int
@@ -81,7 +79,7 @@ func AddOrUpdate(chatID int64, location int) error {
 		return err
 	}
 	ctx := context.Background()
-	exists, err := db.Get().IndexExists("locbot").Do(ctx)
+	/*exists, err := db.Get().IndexExists("locbot").Do(ctx)
 	if err != nil {
 		log.Fatalf("Cannot check index: %s", err)
 		return err
@@ -98,7 +96,7 @@ func AddOrUpdate(chatID int64, location int) error {
 			log.Fatal("Not acknowledge")
 			return err
 		}
-	}
+	}*/
 	query := elastic.NewTermQuery("ChatID", chatID)
 	searchResult, err := db.Get().Search("locbot").Type("location").Query(query).Do(ctx)
 	if err != nil {

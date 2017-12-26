@@ -83,12 +83,11 @@ func Get(startDate, endDate time.Time, location int) string {
 		log.Fatalf("Cannot ping elastic %s", err)
 	}
 	ctx := context.Background()
-	exists, err := db.Get().IndexExists("wetbot").Do(ctx)
+	/*exists, err := db.Get().IndexExists("wetbot").Do(ctx)
 	if err != nil {
 		log.Fatalf("Cannot check index: %s", err)
 	}
 	if !exists {
-		//createIndex, err := db.Get().CreateIndex("wetbot").BodyString(indexMapping).Do(ctx)
 		createIndex, err := db.Get().CreateIndex("wetbot").Do(ctx)
 		db.Get().PutMapping()
 		if err != nil {
@@ -97,14 +96,16 @@ func Get(startDate, endDate time.Time, location int) string {
 		if !createIndex.Acknowledged {
 			log.Fatal("Not acknowledge")
 		}
-	}
-	query := elastic.NewRangeQuery("DtTxt").Gte(startDate.Unix()).Lte(endDate.Unix())
+	}*/
+	queryDate := elastic.NewRangeQuery("DtTxt").Gte(startDate.Unix()).Lte(endDate.Unix())
+
 	queryLocation := elastic.NewTermQuery("Location", location)
-	searchResult, err := db.Get().Search().Index("wetbot").Type("info").Query(query).Query(queryLocation).Sort("DtTxt", true).Do(ctx)
+	query := elastic.NewBoolQuery().Must(queryDate, queryLocation)
+	searchResult, err := db.Get().Search().Index("wetbot").Type("info").From(0).Size(24).Query(query).Sort("DtTxt", true).Do(ctx)
 	if err != nil {
 		log.Printf("Cannot search forecast (first): %s", err)
 	}
-	if searchResult.Hits.TotalHits == 0 {
+	if err != nil || searchResult.Hits.TotalHits == 0 {
 		weather, err := getWeatherFromOpenMap(location)
 		if err != nil {
 			log.Fatalf("Cannot get weather from OpenMap: %s", err)
@@ -123,18 +124,26 @@ func Get(startDate, endDate time.Time, location int) string {
 		}
 	}
 	//log.Printf("Query %s", query)
-	searchResult, err = db.Get().Search().Index("wetbot").Type("info").Query(query).Query(queryLocation).Sort("DtTxt", true).Do(ctx)
+	searchResult, err = db.Get().Search().Index("wetbot").Type("info").From(0).Size(24).Query(query).Sort("DtTxt", true).Do(ctx)
 	if err != nil {
-		log.Printf("Cannot search forecast (second): %s", err)
+		log.Fatalf("Cannot search forecast (second): %s", err)
 	}
 
 	replyString := ""
 	var info InfoElastic
-	for _, item := range searchResult.Each(reflect.TypeOf(info)) {
+	var currentDate time.Time
+	for i, item := range searchResult.Each(reflect.TypeOf(info)) {
 		if t, ok := item.(InfoElastic); ok {
 			icon, ok := icons[t.IconID]
 			if !ok {
 				log.Printf("Cannot find icon for %s", t.IconID)
+			}
+			if i == 0 || currentDate.Day() < time.Unix(t.DtTxt, 0).Day() {
+				currentDate = time.Unix(t.DtTxt, 0)
+				if i != 0 {
+					replyString += "\n"
+				}
+				replyString += currentDate.Weekday().String() + ", " + currentDate.Format("2006-01-02") + "\n"
 			}
 			replyString += time.Unix(t.DtTxt, 0).Format("2006-01-02 15:04:05")[11:] + " " + icon + " " + strconv.Itoa(int(t.Temp)) + "°C " + strconv.Itoa(int(t.Humidity)) + "%\n"
 		}

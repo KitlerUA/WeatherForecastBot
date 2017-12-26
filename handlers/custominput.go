@@ -14,6 +14,20 @@ import (
 )
 
 func CustomInput(message *tbot.Message) {
+	switch message.Text() {
+	case "/start":
+		Start(message)
+		return
+	case "Today":
+		WeatherToday(message)
+		return
+	case "Tomorrow":
+		WeatherTomorrow(message)
+		return
+	case "3 days":
+		Weather3Days(message)
+		return
+	}
 	locationFound := false
 	query := elastic.NewTermQuery("name", strings.ToLower(message.Text()))
 	ctx := context.Background()

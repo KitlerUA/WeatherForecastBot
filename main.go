@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"log"
 
 	"github.com/KitlerUA/WeatherForecastBot/chatslocation"
@@ -13,31 +11,13 @@ import (
 )
 
 func main() {
-	log.Print("Loading data...")
-	chatslocation.DefaultLocationByChatID = make(map[int64]int)
-	data, err := ioutil.ReadFile(config.Get().ChatDefaultLocation)
-	if err != nil {
-		log.Panicf("Cannot load locations from file: %v", err)
-	}
-	if err = json.Unmarshal(data, &chatslocation.DefaultLocationByChatID); err != nil {
-		log.Print("Corrupted data in locations file. Data was`n load", err)
-	}
 	log.Println("Creating indices")
-	err = indexbuilder.BuildIndices("wetbot", "locbot", "citbot")
+	err := indexbuilder.BuildIndices("wetbot", "locbot", "citbot")
 	if err != nil {
 		log.Panicf("Cannot build indices: %s", err)
 	}
 	log.Println("Loading cities")
 	chatslocation.LoadCityList()
-	//save file before close
-	defer func() {
-		data, err = json.Marshal(chatslocation.DefaultLocationByChatID)
-		if err != nil {
-			if err = ioutil.WriteFile(config.Get().ChatDefaultLocation, data, 0666); err != nil {
-				log.Printf("Cannot save chats location in %s", config.Get().ChatDefaultLocation)
-			}
-		}
-	}()
 	log.Print("Creating server...")
 	bot, err := tbot.NewServer(config.Get().BotToken)
 	if err != nil {
@@ -50,6 +30,8 @@ func main() {
 
 	bot.HandleFunc("/start", handlers.Start)
 	bot.HandleFunc("Today", handlers.WeatherToday)
+	bot.HandleFunc("Tomorrow", handlers.WeatherTomorrow)
+	bot.HandleFunc("3 days", handlers.Weather3Days)
 	bot.HandleFunc("{custom}", handlers.CustomInput)
 
 	log.Print("Start listen and serve...")
