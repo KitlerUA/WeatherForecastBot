@@ -83,20 +83,6 @@ func Get(startDate, endDate time.Time, location int) string {
 		log.Fatalf("Cannot ping elastic %s", err)
 	}
 	ctx := context.Background()
-	/*exists, err := db.Get().IndexExists("wetbot").Do(ctx)
-	if err != nil {
-		log.Fatalf("Cannot check index: %s", err)
-	}
-	if !exists {
-		createIndex, err := db.Get().CreateIndex("wetbot").Do(ctx)
-		db.Get().PutMapping()
-		if err != nil {
-			log.Fatalf("Cannot create index: %s ", err)
-		}
-		if !createIndex.Acknowledged {
-			log.Fatal("Not acknowledge")
-		}
-	}*/
 	queryDate := elastic.NewRangeQuery("DtTxt").Gte(startDate.Unix()).Lte(endDate.Unix())
 
 	queryLocation := elastic.NewTermQuery("Location", location)
