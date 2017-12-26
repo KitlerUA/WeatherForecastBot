@@ -20,5 +20,7 @@ func WeatherToday(message *tbot.Message) {
 		message.Reply("We have some problems. Please, try again later")
 		return
 	}
-	message.Reply(weather.Get(time.Now(), time.Now().Add(24*time.Hour), location))
+	replyString := weather.Get(time.Now(), time.Now().Add(24*time.Hour), location)
+	message.Reply(replyString)
+	log.Printf("Reply %s", replyString)
 }

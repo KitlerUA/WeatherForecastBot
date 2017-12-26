@@ -102,7 +102,7 @@ func AddOrUpdate(chatID int64, location int) error {
 	query := elastic.NewTermQuery("ChatID", chatID)
 	searchResult, err := db.Get().Search("locbot").Type("location").Query(query).Do(ctx)
 	if err != nil {
-		log.Printf("Cannot search: %s", err)
+		log.Printf("Cannot search location: %s", err)
 		return err
 	}
 	if searchResult.TotalHits() > 0 {
@@ -111,11 +111,11 @@ func AddOrUpdate(chatID int64, location int) error {
 			Script(elastic.NewScriptInline("ctx._source.Location = params.newl").Lang("painless").Param("newl", location)).
 			Do(ctx)
 		if err != nil {
-			log.Printf("Cannot update doc %d : %s", hitID, err)
+			log.Printf("Cannot update doc %s : %s", hitID, err)
 			return err
 		}
 	} else {
-		log.Printf("Location for %s not found, creating new", chatID)
+		log.Printf("Location for %d not found, creating new", chatID)
 		loc := LocationElastic{
 			ChatID:   chatID,
 			Location: location,

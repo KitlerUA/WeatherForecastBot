@@ -57,6 +57,7 @@ type InfoElastic struct {
 	Humidity    float32
 	Description string
 	DtTxt       int64
+	IconID      string
 }
 
 type Info struct {
@@ -66,6 +67,7 @@ type Info struct {
 	} `json:"main"`
 	Weather []struct {
 		Description string `json:"description"`
+		Icon        string `json:"icon"`
 	} `json:"weather"`
 	DtTxt string `json:"dt_txt"`
 }
@@ -100,7 +102,7 @@ func Get(startDate, endDate time.Time, location int) string {
 	queryLocation := elastic.NewTermQuery("Location", location)
 	searchResult, err := db.Get().Search().Index("wetbot").Type("info").Query(query).Query(queryLocation).Sort("DtTxt", true).Do(ctx)
 	if err != nil {
-		log.Fatalf("Cannot search: %s", err)
+		log.Printf("Cannot search forecast (first): %s", err)
 	}
 	if searchResult.Hits.TotalHits == 0 {
 		weather, err := getWeatherFromOpenMap(location)
@@ -123,14 +125,18 @@ func Get(startDate, endDate time.Time, location int) string {
 	//log.Printf("Query %s", query)
 	searchResult, err = db.Get().Search().Index("wetbot").Type("info").Query(query).Query(queryLocation).Sort("DtTxt", true).Do(ctx)
 	if err != nil {
-		log.Fatalf("Cannot search: %s", err)
+		log.Printf("Cannot search forecast (second): %s", err)
 	}
 
 	replyString := ""
 	var info InfoElastic
 	for _, item := range searchResult.Each(reflect.TypeOf(info)) {
 		if t, ok := item.(InfoElastic); ok {
-			replyString += time.Unix(t.DtTxt, 0).Format("2006-01-02 15:04:05") + " " + t.Description + " " + strconv.Itoa(int(t.Temp)) + "°C " + strconv.Itoa(int(t.Humidity)) + "%\n"
+			icon, ok := icons[t.IconID]
+			if !ok {
+				log.Printf("Cannot find icon for %s", t.IconID)
+			}
+			replyString += time.Unix(t.DtTxt, 0).Format("2006-01-02 15:04:05")[11:] + " " + icon + " " + strconv.Itoa(int(t.Temp)) + "°C " + strconv.Itoa(int(t.Humidity)) + "%\n"
 		}
 	}
 	return replyString
@@ -169,6 +175,7 @@ func infoToElasticInfo(info Info, location int) InfoElastic {
 		Humidity:    info.Main.Humidity,
 		Description: info.Weather[0].Description,
 		DtTxt:       dt.Unix(),
+		IconID:      info.Weather[0].Icon,
 	}
 	return res
 }

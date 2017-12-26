@@ -8,6 +8,7 @@ import (
 	"github.com/KitlerUA/WeatherForecastBot/chatslocation"
 	"github.com/KitlerUA/WeatherForecastBot/config"
 	"github.com/KitlerUA/WeatherForecastBot/handlers"
+	"github.com/KitlerUA/WeatherForecastBot/indexbuilder"
 	"github.com/yanzay/tbot"
 )
 
@@ -21,6 +22,12 @@ func main() {
 	if err = json.Unmarshal(data, &chatslocation.DefaultLocationByChatID); err != nil {
 		log.Print("Corrupted data in locations file. Data was`n load", err)
 	}
+	log.Println("Creating indices")
+	err = indexbuilder.BuildIndices("wetbot", "locbot", "citbot")
+	if err != nil {
+		log.Panicf("Cannot build indices: %s", err)
+	}
+	log.Println("Loading cities")
 	chatslocation.LoadCityList()
 	//save file before close
 	defer func() {
