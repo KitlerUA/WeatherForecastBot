@@ -20,37 +20,6 @@ import (
 	"github.com/yanzay/log"
 )
 
-const indexMapping = `
-{
-	"settings":{
-		"number_of_shards": 1,
-		"number_of_replicas": 0
-	},
-	"mappings":{
-		"info":{
-			"properties":{
-				"location":{
-					"type":"long"
-				},
-				"temp":{
-					"type":"float"
-				},
-				"humidity":{
-					"type":"float"
-				},
-				"description":{
-					"type":"text",
-					"store": true,
-					"fielddata": true
-				},
-				"dttxt":{
-					"type":"long"
-				}
-			}
-		}
-	}
-}`
-
 type InfoElastic struct {
 	Location    int
 	Temp        float32
@@ -94,7 +63,8 @@ func Get(startDate, endDate time.Time, location int) string {
 	if err != nil || searchResult.Hits.TotalHits == 0 {
 		weather, err := getWeatherFromOpenMap(location)
 		if err != nil {
-			log.Fatalf("Cannot get weather from OpenMap: %s", err)
+			log.Printf("Cannot get weather from OpenMap: %s", err)
+			return "Please, try again later"
 		}
 		for _, info := range weather.List {
 

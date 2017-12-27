@@ -7,6 +7,7 @@ import (
 	"github.com/KitlerUA/WeatherForecastBot/config"
 	"github.com/KitlerUA/WeatherForecastBot/handlers"
 	"github.com/KitlerUA/WeatherForecastBot/indexbuilder"
+	"github.com/KitlerUA/WeatherForecastBot/weather"
 	"github.com/yanzay/tbot"
 )
 
@@ -33,7 +34,8 @@ func main() {
 	bot.HandleFunc("Tomorrow", handlers.WeatherTomorrow)
 	bot.HandleFunc("3 days", handlers.Weather3Days)
 	bot.HandleFunc("{custom}", handlers.CustomInput)
-
+	log.Printf("Start weather updater...")
+	go weather.Update()
 	log.Print("Start listen and serve...")
 	err = bot.ListenAndServe()
 	log.Fatal(err)

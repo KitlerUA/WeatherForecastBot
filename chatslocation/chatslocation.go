@@ -29,49 +29,6 @@ type CityElastic struct {
 	Country string `json:"country"`
 }
 
-const indexMapping = `
-{
-	"settings":{
-		"number_of_shards": 1,
-		"number_of_replicas": 0
-	},
-	"mappings":{
-		"location":{
-			"properties":{
-				"chatid":{
-					"type":"long"
-				},
-				"location":{
-					"type":"int"
-				}
-			}
-		}
-	}
-}`
-
-const cityListMapping = `
-{
-	"settings":{
-		"number_of_shards": 1,
-		"number_of_replicas": 0
-	},
-	"mappings":{
-		"city":{
-			"properties":{
-				"id":{
-					"type":"int"
-				},
-				"name":{
-					"type":"text"
-				},
-				"country":{
-					"type":"keyword"
-				}
-			}
-		}
-	}
-}`
-
 func AddOrUpdate(chatID int64, location int) error {
 	_, err := db.Get().ElasticsearchVersion(config.Get().ElasticAddress)
 	if err != nil {
@@ -149,4 +106,21 @@ func Get(chatID int64) (int, error) {
 	}
 	var eL LocationElastic
 	return searchResult.Each(reflect.TypeOf(eL))[0].(LocationElastic).Location, nil
+}
+
+func GetUnique() []int {
+	ctx := context.Background()
+	query := elastic.NewTermsAggregation().Field("Location").Size(100)
+	searchResult, err := db.Get().Search().Index("locbot").Type("location").Aggregation("Locations", query).Do(ctx)
+	if err != nil {
+		log.Printf("Cannot get aggregation on Location: %s", err)
+		return []int{}
+	}
+	var result []int
+	if agg, found := searchResult.Aggregations.Terms("Locations"); found {
+		for _, bucket := range agg.Buckets {
+			result = append(result, int(bucket.Key.(float64)))
+		}
+	}
+	return result
 }
